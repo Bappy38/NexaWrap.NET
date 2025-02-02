@@ -2,6 +2,8 @@ name: Publish NuGet Packages
 
 on:
   push:
+    branches:
+      - main
     tags:
       - "v*.*.*"  # Runs when a versioned Git tag is pushed (git tag v1.0.0, git push origin v1.0.0)
 
