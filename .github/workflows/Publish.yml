@@ -29,3 +29,5 @@ jobs:
 
       - name: Publish NexaWrap.SQS.NET to NuGet
         run: dotnet nuget push ./packages/NexaWrap.SQS.NET.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
