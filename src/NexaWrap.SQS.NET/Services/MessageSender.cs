@@ -23,6 +23,11 @@ public class MessageSender : IMessageSender
 
     public async Task SendMessageAsync<TMessage>(string queueName, TMessage message) where TMessage : IMessage
     {
+        if (string.IsNullOrEmpty(message.CorrelationId))
+        {
+            message.CorrelationId = Guid.NewGuid().ToString();
+        }
+
         var queueUrl = await _sqsClient.GetQueueUrlAsync(queueName);
         var request = new SendMessageRequest
         {
@@ -43,7 +48,7 @@ public class MessageSender : IMessageSender
                     new MessageAttributeValue
                     {
                         DataType = "String",
-                        StringValue = message.CorrelationId ?? Guid.NewGuid().ToString()
+                        StringValue = message.CorrelationId
                     }
                 }
             }
@@ -70,6 +75,14 @@ public class MessageSender : IMessageSender
                         {
                             DataType = "String",
                             StringValue = m.MessageTypeName
+                        }
+                    },
+                    {
+                        MessageAttributes.CorrelationId,
+                        new MessageAttributeValue
+                        {
+                            DataType = "String",
+                            StringValue = m.CorrelationId
                         }
                     }
                 }

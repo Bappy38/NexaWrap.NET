@@ -91,6 +91,8 @@ public class MessageConsumer : BackgroundService
 
             await _messageDispatcher.DispatchAsync(deserializedMessage);
 
+            _logger.LogInformation("Message with ID {MessageId}, CorrelationId {CorrelationId} processed successfully", message.MessageId, deserializedMessage.CorrelationId);
+
             await _sqsClient.DeleteMessageAsync(queueUrl, message.ReceiptHandle, cancellationToken);
         }
         catch (Exception ex)
