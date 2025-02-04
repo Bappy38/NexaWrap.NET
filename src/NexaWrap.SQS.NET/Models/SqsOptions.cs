@@ -25,10 +25,10 @@ public class SqsOptions
     /// <summary>
     /// The maximum number of messages to receive in a single batch.
     /// </summary>
-    public int MaxBatchSize { get; set; }
+    public int MaxBatchSize { get; set; } = 1;
 
     /// <summary>
     /// The number of seconds to wait for a message to arrive before returning an empty result.
     /// </summary>
-    public int WaitTimeSeconds { get; set; }
+    public int WaitTimeSeconds { get; set; } = 20;
 }

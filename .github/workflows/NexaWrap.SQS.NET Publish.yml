@@ -1,9 +1,9 @@
-name: Publish NuGet Packages
+name: Publish NexaWrap.SQS.NET
 
 on:
   push:
     branches:
-      - main
+      - release/NexaWrap.SQS.NET
     tags:
       - "v*.*.*"  # Runs when a versioned Git tag is pushed (git tag v1.0.0, git push origin v1.0.0)
 
