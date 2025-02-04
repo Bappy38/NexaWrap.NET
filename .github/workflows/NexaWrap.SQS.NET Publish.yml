@@ -2,8 +2,6 @@ name: Publish NexaWrap.SQS.NET
 
 on:
   push:
-    branches:
-      - release/NexaWrap.SQS.NET
     tags:
       - "v*.*.*"  # Runs when a versioned Git tag is pushed (git tag v1.0.0, git push origin v1.0.0)
 
@@ -30,4 +28,4 @@ jobs:
         run: dotnet pack src/NexaWrap.SQS.NET/NexaWrap.SQS.NET.csproj --configuration Release --output ./packages
 
       - name: Publish NexaWrap.SQS.NET to NuGet
-        run: dotnet nuget push ./packages/NexaWrap.SQS.NET.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
+        run: dotnet nuget push ./packages/NexaWrap.SQS.NET.*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
