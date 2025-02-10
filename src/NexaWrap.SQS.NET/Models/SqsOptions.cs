@@ -1,4 +1,6 @@
-﻿namespace NexaWrap.SQS.NET.Models;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace NexaWrap.SQS.NET.Models;
 
 public class SqsOptions
 {
@@ -23,12 +25,14 @@ public class SqsOptions
     public string AwsRegion { get; set; }
 
     /// <summary>
-    /// The maximum number of messages to receive in a single batch.
+    /// The maximum number of messages to receive in a single batch. Value must be within [1, 10].
     /// </summary>
+    [Range(1, 10)]
     public int MaxBatchSize { get; set; } = 1;
 
     /// <summary>
-    /// The number of seconds to wait for a message to arrive before returning an empty result.
+    /// The number of seconds to wait for a message to arrive before returning an empty result. Value must be within [0, 20].
     /// </summary>
+    [Range(0, 20)]
     public int WaitTimeSeconds { get; set; } = 20;
 }

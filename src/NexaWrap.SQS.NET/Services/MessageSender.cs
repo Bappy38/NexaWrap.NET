@@ -23,17 +23,19 @@ public class MessageSender : IMessageSender
 
     public async Task SendMessageAsync<TMessage>(string queueName, TMessage message) where TMessage : IMessage
     {
-        if (string.IsNullOrEmpty(message.CorrelationId))
+        try
         {
-            message.CorrelationId = Guid.NewGuid().ToString();
-        }
+            if (string.IsNullOrEmpty(message.CorrelationId))
+            {
+                message.CorrelationId = Guid.NewGuid().ToString();
+            }
 
-        var queueUrl = await _sqsClient.GetQueueUrlAsync(queueName);
-        var request = new SendMessageRequest
-        {
-            QueueUrl = queueUrl.QueueUrl,
-            MessageBody = JsonSerializer.Serialize(message),
-            MessageAttributes = new Dictionary<string, MessageAttributeValue>
+            var queueUrl = await _sqsClient.GetQueueUrlAsync(queueName);
+            var request = new SendMessageRequest
+            {
+                QueueUrl = queueUrl.QueueUrl,
+                MessageBody = JsonSerializer.Serialize(message),
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>
             {
                 {
                     MessageAttributes.MessageTypeName,
@@ -52,22 +54,30 @@ public class MessageSender : IMessageSender
                     }
                 }
             }
-        };
-        await _sqsClient.SendMessageAsync(request);
-        _logger.LogInformation("Message of type {MessageTypeName} sent successfully", message.MessageTypeName);
+            };
+            await _sqsClient.SendMessageAsync(request);
+            _logger.LogInformation("Message of type {MessageTypeName} sent successfully", message.MessageTypeName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to sent message of Type: {MessageTypeName}, CorrelationId: {CorrelationId}. ExceptionMessage: {ExceptionMessage}", message.MessageTypeName, message.CorrelationId, ex.Message);
+            throw;
+        }
     }
 
-    public async Task SendBatchMessageAsync<TMessage>(string queueName, List<TMessage> messages) where TMessage : IMessage
+    public async Task SendMessagesAsync<TMessage>(string queueName, List<TMessage> messages) where TMessage : IMessage
     {
-        var queueUrl = await _sqsClient.GetQueueUrlAsync(queueName);
-
-        foreach (var messageChunk in messages.Chunk(10))
+        try
         {
-            var messageBatch = messageChunk.Select(m => new SendMessageBatchRequestEntry
+            var queueUrl = await _sqsClient.GetQueueUrlAsync(queueName);
+
+            foreach (var messageChunk in messages.Chunk(10))
             {
-                Id = Guid.NewGuid().ToString(),
-                MessageBody = JsonSerializer.Serialize(m),
-                MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                var messageBatch = messageChunk.Select(m => new SendMessageBatchRequestEntry
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    MessageBody = JsonSerializer.Serialize(m),
+                    MessageAttributes = new Dictionary<string, MessageAttributeValue>
                 {
                     {
                         MessageAttributes.MessageTypeName,
@@ -86,25 +96,30 @@ public class MessageSender : IMessageSender
                         }
                     }
                 }
-            });
+                });
 
-            var sendMessageBatchRequest = new SendMessageBatchRequest
-            {
-                QueueUrl = queueUrl.QueueUrl,
-                Entries = messageBatch.ToList()
-            };
+                var sendMessageBatchRequest = new SendMessageBatchRequest
+                {
+                    QueueUrl = queueUrl.QueueUrl,
+                    Entries = messageBatch.ToList()
+                };
 
-            var batchSendResponse = await _sqsClient.SendMessageBatchAsync(sendMessageBatchRequest);
+                var batchSendResponse = await _sqsClient.SendMessageBatchAsync(sendMessageBatchRequest);
 
-            if (batchSendResponse.Failed.Count > 0)
-            {
-                _logger.LogError("Failed to send {FailedCount} messages from a batch", batchSendResponse.Failed.Count);
+                if (batchSendResponse.Failed.Count > 0)
+                {
+                    _logger.LogError("Failed to send {FailedCount} messages from a batch", batchSendResponse.Failed.Count);
+                }
+                else
+                {
+                    _logger.LogInformation("Succesfully sent a batch message of size {Count}", sendMessageBatchRequest.Entries.Count);
+                }
             }
-            else
-            {
-                _logger.LogInformation("Succesfully sent a batch message of size {Count}", sendMessageBatchRequest.Entries.Count);
-            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to sent message batch. ExceptionMessage: {ExceptionMessage}", ex.Message);
+            throw;
         }
     }
 }
-
