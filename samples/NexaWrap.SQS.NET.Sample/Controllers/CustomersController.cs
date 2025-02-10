@@ -17,9 +17,22 @@ public class CustomersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> Create([FromBody] CustomerCreated customerCreated)
+    public async Task<ActionResult> Create()
     {
-        await _messageSender.SendMessageAsync("ByteBox-FileStore-Dev", customerCreated);
+        var customerNames = new List<string>
+        {
+            "Bappy",
+            "Jabed"
+        };
+
+        var messages = customerNames.Select(c => new CustomerCreated
+        {
+            Id = Guid.NewGuid(),
+            Name = c,
+            CorrelationId = Guid.NewGuid().ToString()
+        }).ToList();
+
+        await _messageSender.SendMessagesAsync("ByteBox-FileStore-Dev", messages);
         return Ok();
     }
 }

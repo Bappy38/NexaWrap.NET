@@ -36,8 +36,8 @@ To use **NexaWrap.SQS.NET**, add the following configuration in `appsettings.jso
 | `AwsAccessKey` | AWS access key for authentication. |
 | `AwsSecretKey` | AWS secret key for authentication. |
 | `AwsRegion` | AWS region where the SQS queue is created. |
-| `MaxBatchSize` | Maximum number of messages received in one batch (default: `1`). |
-| `WaitTimeSeconds` | Number of seconds to wait before returning an empty response when polling SQS (default: `20`). |
+| `MaxBatchSize` | Maximum number of messages received in one batch (default: `1`). Value must be within [1,10] |
+| `WaitTimeSeconds` | Number of seconds to wait before returning an empty response when polling SQS (default: `20`). Value must be within [1, 20]. |
 
 ---
 
@@ -85,7 +85,17 @@ public class CustomerService
             Name = name
         };
 
-        await _messageSender.SendAsync("queue-name", message);
+        await _messageSender.SendMessageAsync("queue-name", message);
+    }
+
+    public async Task PublishBatchCustomerCreatedEvent(List<Customer> customers)
+    {
+        var messages = customers.Select(c => new CustomerCreated
+        {
+            Id = c.Id,
+            Name = c.Name
+        });
+        await _messageSender.SendMessagesAsync("queue-name", messages);
     }
 }
 ```
